@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <chrono>
-
+#include <random>
 #include <list>
 #include <unordered_map>
 #include <iostream>
@@ -15,6 +15,8 @@
 #include <limits>
 #include <thread>
 #include <queue>
+#include <cassert>
+#include <cstring>
 
 enum FieldType { INT, FLOAT, STRING };
 
@@ -618,6 +620,12 @@ int main() {
 
     // Get the end time
     auto end = std::chrono::high_resolution_clock::now();
+
+    std::random_device rd;     // Only used once to initialise (seed) engine
+    std::mt19937 rng(rd());    // Random-number engine used (Mersenne-Twister in this case)
+    std::uniform_int_distribution<int> uni(0,10);
+
+    std::cout << uni(rng) << '\n';
 
     // Calculate and print the elapsed time
     std::chrono::duration<double> elapsed = end - start;
