@@ -1,6 +1,5 @@
 #!/bin/bash
-cd src
-g++ -std=c++14 -O1 -g -Wall -Wextra 16-buzzdb.cpp -o ../buzzdb_naive
+
+g++ -std=c++14 -O1 -g -Wall -Wextra src/16-buzzdb.cpp -o buzzdb_naive
 rm buzzdb.dat
-../buzzdb_naive
-cd ../
+./buzzdb_naive

@@ -181,6 +181,8 @@ public:
     size_t metadata_size = sizeof(Slot) * MAX_SLOTS;
 
     size_t current_num_tuples;
+    std::vector<size_t> free_slots_index;
+
 
     SlottedPage(){
         current_num_tuples = 0;
@@ -211,6 +213,19 @@ public:
                 slot_array[slot_itr].length >= tuple_size) {
                 break;
             }
+        }
+        if (free_slots_index.size() != 0)
+        {
+            //std::cout << "slot in free_index: " << free_slots_index[0] << '\n';
+            slot_itr = free_slots_index[0];
+            //std::cout << "naive chosen slot: " << slot_itr << '\n';
+            free_slots_index.erase(free_slots_index.begin() + 0);
+        }
+        else
+        {
+            std::cout << "naive_index: " << slot_itr << '\n';
+            std::cout << "num tuples index: " << current_num_tuples << '\n';
+            //slot_itr = current_num_tuples;
         }
         if (slot_itr == MAX_SLOTS){
             //std::cout << "Page does not contain an empty slot with sufficient space to store the tuple.";
@@ -266,6 +281,8 @@ public:
             if(slot_itr == index and
                slot_array[slot_itr].empty == false){
                 slot_array[slot_itr].empty = true;
+                free_slots_index.push_back(slot_itr);
+                std::cout << "deleted: " << slot_itr << '\n';
                 current_num_tuples--;
                 break;
                }
