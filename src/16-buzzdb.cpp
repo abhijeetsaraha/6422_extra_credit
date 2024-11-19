@@ -4,7 +4,8 @@
 #include <fstream>
 #include <iostream>
 #include <chrono>
-#include <random>
+#include <cassert>
+#include <cstring>
 #include <list>
 #include <unordered_map>
 #include <iostream>
@@ -15,8 +16,7 @@
 #include <limits>
 #include <thread>
 #include <queue>
-#include <cassert>
-#include <cstring>
+#include <random>
 
 enum FieldType { INT, FLOAT, STRING };
 
@@ -180,7 +180,10 @@ public:
     std::unique_ptr<char[]> page_data = std::make_unique<char[]>(PAGE_SIZE);
     size_t metadata_size = sizeof(Slot) * MAX_SLOTS;
 
+    size_t current_num_tuples;
+
     SlottedPage(){
+        current_num_tuples = 0;
         // Empty page -> initialize slot array inside page
         Slot* slot_array = reinterpret_cast<Slot*>(page_data.get());
         for (size_t slot_itr = 0; slot_itr < MAX_SLOTS; slot_itr++) {
@@ -252,7 +255,7 @@ public:
         std::memcpy(page_data.get() + offset, 
                     serializedTuple.c_str(), 
                     tuple_size);
-
+        current_num_tuples++;
         return true;
     }
 
@@ -263,6 +266,7 @@ public:
             if(slot_itr == index and
                slot_array[slot_itr].empty == false){
                 slot_array[slot_itr].empty = true;
+                current_num_tuples--;
                 break;
                }
         }
@@ -550,7 +554,20 @@ public:
         // Skip deleting tuples only once every hundred tuples
         if (tuple_insertion_attempt_counter % 100 != 0){
             auto& page = buffer_manager.getPage(0);
-            page->deleteTuple(0);
+            std::random_device seeder;
+            //then make a mersenne twister engine
+            std::mt19937 engine(seeder());
+            //then the easy part... the distribution
+            std::uniform_int_distribution<int> dist(0, page->current_num_tuples);
+            //then just generate the integer like this:
+            int random_idx = dist(engine);
+            
+            std::cout << "Num tuples in page: " << page->current_num_tuples << '\n';
+            random_idx = std::rand() % page->current_num_tuples;
+            std::cout << "random index: " << random_idx << '\n';
+            //if (random_idx == page->current_num_tuples)
+            //    std::cout << "Reached equal\n";
+            page->deleteTuple(random_idx);
             buffer_manager.flushPage(0);
         }
     }
@@ -620,12 +637,6 @@ int main() {
 
     // Get the end time
     auto end = std::chrono::high_resolution_clock::now();
-
-    std::random_device rd;     // Only used once to initialise (seed) engine
-    std::mt19937 rng(rd());    // Random-number engine used (Mersenne-Twister in this case)
-    std::uniform_int_distribution<int> uni(0,10);
-
-    std::cout << uni(rng) << '\n';
 
     // Calculate and print the elapsed time
     std::chrono::duration<double> elapsed = end - start;
